@@ -1,8 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
+import datetime
 from user import User
 import config
 from passwordhelper import PasswordHelper
+from bitlyhelper import BitlyHelper
 if config.test:
     from mockdbhelper import MockDBHelper as DBHelper
 else:
@@ -10,6 +12,7 @@ else:
 
 DB = DBHelper()
 PH = PasswordHelper()
+BH = BitlyHelper()
 
 app = Flask(__name__)
 app.secret_key = 'a4e13nbyQdfMo1SGxchbGM8zLj+fCDR9lg07wxFiyVagq1cwdlUlYW3uXSGRXPof'
@@ -46,7 +49,12 @@ def account():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    now = datetime.datetime.now()
+    requests = DB.get_requests(current_user.get_id())
+    for req in requests:
+        deltaseconds = (now-req['time']).seconds
+        req['wait_minutes'] = "{}'{}''".format((deltaseconds//60), str(deltaseconds%60).zfill(2))
+    return render_template('dashboard.html', requests=requests)
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -67,7 +75,7 @@ def register():
 def account_createtable():
     tablename = request.form.get('tablenumber')
     tableid = DB.add_table(tablename, current_user.get_id())
-    new_url = config.base_url + "newrequest/" + tableid
+    new_url = BH.shorten_url(config.base_url + "newrequest/" + str(tableid))
     DB.update_table(tableid, new_url)
     return redirect(url_for('account'))
 
@@ -77,6 +85,25 @@ def account_deletetable():
     tableid = request.args.get('tableid')
     DB.delete_table(tableid)
     return redirect(url_for('account'))
+
+@app.route('/newrequest/<tid>')
+def create_request(tid):
+    DB.add_request(tid, datetime.datetime.now())
+    return """<html>
+                <head>
+                </head>
+                <body>
+                <h2>Your request has been logged and a waiter will be with you shortly
+                </h2>
+                </body>
+            <html>"""
+
+@app.route('/dashboard/resolve')
+@login_required
+def dashboard_resolve():
+    request_id = request.args.get('request_id')
+    DB.delete_request(request_id)
+    return redirect(url_for('dashboard'))
 
 @login_manager.user_loader
 def load_user(user_id):
