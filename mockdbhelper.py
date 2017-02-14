@@ -1,6 +1,6 @@
 import datetime
 
-MOCK_USERS = [{'email': 'test', 'salt': 'euIMf6MxxN8zN0YBh1yObEkVZfE=', 'hashed': '3ee4a0792c815a22a828642527bed5498f8e22ee134feb8c13882843af636c8747bcfce01e033e293994c11f4f3bdb89907233fb509961129000c92fe9a254af'}]
+MOCK_USERS = [{'email': 'test@123.com', 'salt': 'euIMf6MxxN8zN0YBh1yObEkVZfE=', 'hashed': '3ee4a0792c815a22a828642527bed5498f8e22ee134feb8c13882843af636c8747bcfce01e033e293994c11f4f3bdb89907233fb509961129000c92fe9a254af'}]
 
 MOCK_TABLES = [{'_id': '1', 'number': '1', 'owner': 'test', 'url': 'mockurl'}]
 
